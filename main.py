@@ -196,27 +196,39 @@ class ClipboardManagerApp:
             # Press subflow_button for show all subflow
             try:
                 subflow_button = pyautogui.locateOnScreen('assets/subflow_button.png')
-                image_center = pyautogui.center(subflow_button)
-                pyautogui.click(image_center)
 
                 if subflow_button:
-                    # Loop until the image is found for copy subflow
-                    try:
-                        for entry in self.clipboard_entries:
-                            # Copy each list to clipboard
-                            expected_content = entry['content']
-                            pyperclip.copy(expected_content)
+                    image_center = pyautogui.center(subflow_button)
+                    pyautogui.click(image_center)
 
-                            # # Dynamic delay to ensure the clipboard is properly set
-                            time.sleep(min(0.1 + len(expected_content) * 0.002, 5))
-
-                            # Now paste the content in Power Automate
-                            pyautogui.hotkey('ctrl', 'v')
+                    # Loop through clipboard entries and paste them
+                    for index, entry in enumerate(self.clipboard_entries):
+                        # Copy each list to clipboard
+                        expected_content = entry['content']
+                        pyperclip.copy(expected_content)
                         
-                        self.update_status("Subflows pasted successfully.")
+                        # Poll the clipboard until the content is set or timeout occurs
+                        start_time = time.time()
+                        max_wait_time = 30  # Set max wait time to 30 seconds
+                        clipboard_ready = False
 
-                    except Exception as e:
-                        self.update_status(f"Error during Get from PAD: {str(e)}")
+                        # Keep checking if the clipboard matches the expected content
+                        while time.time() - start_time < max_wait_time:
+                            if pyperclip.paste() == expected_content:
+                                clipboard_ready = True
+                                break
+                            time.sleep(0.3)  # Check every 300 milliseconds
+
+                        # If clipboard is ready, proceed with pasting
+                        if clipboard_ready:
+                            pyautogui.hotkey('ctrl', 'v')
+                            time.sleep(1.5)  # Allow time for the paste to complete
+                            self.update_status(f"Successfully pasted entry {index+1}/{len(self.clipboard_entries)}")
+                        else:
+                            self.update_status(f"Failed to set clipboard for entry {index+1}. Clipboard did not match within the timeout.")
+                            break  # Exit if clipboard content was not set in time
+                    
+                    self.update_status("Subflows pasted successfully.")
 
                 else:
                     self.update_status("Image not found.")
