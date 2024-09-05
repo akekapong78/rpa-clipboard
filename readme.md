@@ -24,4 +24,7 @@ The **RPA Clipboard Manager** is a simple yet powerful Python-based GUI applicat
 To run the application, you need to install the following libraries:
 
 ```bash
-pip install pyperclip
+pip install pyautogui pygetwindow pillow pyperclip pyinstaller
+
+```bash
+pyinstaller main.py --onefile --windowed

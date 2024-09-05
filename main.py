@@ -8,8 +8,6 @@ import pygetwindow as gw
 import sys
 import time
 
-# pyinstaller tenet.py --onefile --windowed
-# pip install pyautogui pygetwindow pillow pyperclip
 
 class ClipboardManagerApp:
     def __init__(self, root):
