@@ -26,5 +26,6 @@ To run the application, you need to install the following libraries:
 ```bash
 pip install pyautogui pygetwindow pillow pyperclip pyinstaller
 
-```bash
 pyinstaller main.py --onefile --windowed
+
+```
