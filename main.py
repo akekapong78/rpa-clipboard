@@ -3,9 +3,13 @@ from tkinter import messagebox, filedialog
 import pyperclip
 import json
 import re
+import pyautogui
+import pygetwindow as gw
+import sys
+import time
 
 # pyinstaller tenet.py --onefile --windowed
-# pip install pyperclip
+# pip install pyautogui pygetwindow pillow pyperclip
 
 class ClipboardManagerApp:
     def __init__(self, root):
@@ -24,7 +28,7 @@ class ClipboardManagerApp:
         self.copy_button = tk.Button(self.frame, text="Set Clipboard", command=self.copy_to_clipboard,
                                      bg='#9C27B0', fg='white', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5)
         self.copy_button.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
-        
+
         self.load_button = tk.Button(self.frame, text="Load from File", command=self.load_entries_from_file,
                                      bg='#FF5722', fg='white', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5)
         self.load_button.grid(row=1, column=0, padx=5, pady=5, sticky='ew')
@@ -33,9 +37,18 @@ class ClipboardManagerApp:
                                      bg='#2196F3', fg='white', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5)
         self.save_button.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
 
+        self.get_pad_button = tk.Button(self.frame, text="Get from PAD", command=self.get_from_pad,
+                                        bg='#607D8B', fg='white', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5)
+        self.get_pad_button.grid(row=2, column=0, padx=5, pady=5, sticky='ew')
+
+        self.set_pad_button = tk.Button(self.frame, text="Set to PAD", command=self.set_to_pad,
+                                        bg='#795548', fg='white', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5)
+        self.set_pad_button.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
+
         self.clear_button = tk.Button(self.frame, text="Clear List", command=self.clear_list,
                                       bg='#FFC107', fg='black', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5)
-        self.clear_button.grid(row=2, column=0, columnspan=2, padx=5, pady=10, sticky='ew')
+        self.clear_button.grid(row=3, column=0, columnspan=2, padx=5, pady=10, sticky='ew')
+
 
         # Listbox to display clipboard entries
         self.listbox = tk.Listbox(self.root, font=('Arial', 12), selectmode=tk.SINGLE)
@@ -47,6 +60,7 @@ class ClipboardManagerApp:
 
         # List to store clipboard entries
         self.clipboard_entries = []
+
 
     def find_text_between(self, text, start, end):
         start_index = text.find(start)
@@ -62,7 +76,6 @@ class ClipboardManagerApp:
         if clipboard_content:
             # Extract function names using regex
             functions = self.find_text_between(clipboard_content, "FUNCTION ", " GLOBAL")
-            # functions = re.findall(r'FUNCTION\s+(\w+)\s+GLOBAL', clipboard_content)
             if functions:
                 entry_label = f"{functions}"
                 self.clipboard_entries.append({'label': entry_label, 'content': clipboard_content})
@@ -123,6 +136,53 @@ class ClipboardManagerApp:
 
     def update_status(self, message):
         self.status_bar.config(text=message)
+
+    def get_from_pad(self):
+        # Find and activate the Power Automate window
+        windows = gw.getWindowsWithTitle('Power Automate | ')
+        if len(windows) > 0:
+            power_automate_window = windows[0]
+            power_automate_window.activate()
+            self.update_status("Power Automate window focused.")
+
+            # Press subflow_button for show all subflow
+            try:
+                subflow_button = pyautogui.locateOnScreen('assets/subflow_button.png')
+                if subflow_button:
+                    image_center = pyautogui.center(subflow_button)
+                    pyautogui.click(image_center)
+                    self.update_status("Clicked on the image in Power Automate.")
+
+                    # Loop until the image is found for copy subflow
+                    try:
+                        while True:
+                            pyautogui.hotkey('ctrl', 'c')
+                            self.add_clipboard_entry()
+                            time.sleep(0.3)  # Adjust the delay as needed
+                            pyautogui.press('down')
+                            
+                            # Image found, click on it and exit the loop
+                            try:
+                                end_button = pyautogui.locateOnScreen('assets/subflow_button_active.png')
+                                if end_button:
+                                    self.update_status("Copied all subflow.")
+                                    break  # Exit the loop when the image is found
+                            except:
+                                continue
+
+                    except Exception as e:
+                        self.update_status(f"Error during Get from PAD: {str(e)}")
+
+                else:
+                    self.update_status("Image not found.")
+            except Exception as e:
+                self.update_status(f"Error during Get from PAD: {str(e)}")
+        else:
+            self.update_status("Power Automate window not found. Exiting...")
+
+    def set_to_pad(self):
+        # Placeholder for functionality to set data to Power Automate
+        self.update_status("Set to PAD function not implemented yet.")
 
 if __name__ == "__main__":
     root = tk.Tk()
