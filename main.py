@@ -16,7 +16,8 @@ class ClipboardManagerApp:
         # self.root.geometry("500x400")  # Set initial window size
 
         self.frame = tk.Frame(self.root, padx=10, pady=10)
-        self.frame.pack(fill=tk.BOTH, expand=True)
+        self.frame.pack(fill=tk.BOTH)
+        # self.frame.pack(fill=tk.BOTH, expand=True)
 
         # Create buttons with styling and grid layout
         self.add_button = tk.Button(self.frame, text="Add Clipboard", command=self.add_clipboard_entry,
@@ -110,7 +111,7 @@ class ClipboardManagerApp:
                 with open(file_path, 'r') as file:
                     self.clipboard_entries = json.load(file)
                 self.update_listbox()
-                self.update_status(f"Entries loaded from {file_path}")
+                self.update_status(f"Loaded from {file_path}")
             except Exception as e:
                 self.update_status(f"Error: {str(e)}")
 
@@ -149,6 +150,7 @@ class ClipboardManagerApp:
                 if subflow_button:
                     image_center = pyautogui.center(subflow_button)
                     pyautogui.click(image_center)
+                    pyautogui.press(['up', 'down'])
                     self.update_status("Clicked on the image in Power Automate.")
 
                     # Loop until the image is found for copy subflow
@@ -156,7 +158,7 @@ class ClipboardManagerApp:
                         while True:
                             pyautogui.hotkey('ctrl', 'c')
                             self.add_clipboard_entry()
-                            time.sleep(0.3)  # Adjust the delay as needed
+                            time.sleep(0.5)  # Adjust the delay as needed
                             pyautogui.press('down')
                             
                             # Image found, click on it and exit the loop
@@ -170,6 +172,51 @@ class ClipboardManagerApp:
 
                     except Exception as e:
                         self.update_status(f"Error during Get from PAD: {str(e)}")
+                else:
+                    self.update_status("Image not found.")
+            except Exception as e:
+                self.update_status(f"Error during Get from PAD: {str(e)}")
+        else:
+            self.update_status("Power Automate window not found. Exiting...")
+        
+        # Show a popup message saying "Done"
+        self.root.focus_force()
+        messagebox.showinfo("Status", "Done subflow copying!")
+
+
+    def set_to_pad(self):
+        pyperclip.copy('')  # Optionally clear the clipboard
+        # Find and activate the Power Automate window
+        windows = gw.getWindowsWithTitle('Power Automate | ')
+        if len(windows) > 0:
+            power_automate_window = windows[0]
+            power_automate_window.activate()
+            self.update_status("Power Automate window focused.")
+
+            # Press subflow_button for show all subflow
+            try:
+                subflow_button = pyautogui.locateOnScreen('assets/subflow_button.png')
+                image_center = pyautogui.center(subflow_button)
+                pyautogui.click(image_center)
+
+                if subflow_button:
+                    # Loop until the image is found for copy subflow
+                    try:
+                        for entry in self.clipboard_entries:
+                            # Copy each list to clipboard
+                            expected_content = entry['content']
+                            pyperclip.copy(expected_content)
+
+                            # # Dynamic delay to ensure the clipboard is properly set
+                            time.sleep(min(0.1 + len(expected_content) * 0.002, 5))
+
+                            # Now paste the content in Power Automate
+                            pyautogui.hotkey('ctrl', 'v')
+                        
+                        self.update_status("Subflows pasted successfully.")
+
+                    except Exception as e:
+                        self.update_status(f"Error during Get from PAD: {str(e)}")
 
                 else:
                     self.update_status("Image not found.")
@@ -177,10 +224,10 @@ class ClipboardManagerApp:
                 self.update_status(f"Error during Get from PAD: {str(e)}")
         else:
             self.update_status("Power Automate window not found. Exiting...")
-
-    def set_to_pad(self):
-        # Placeholder for functionality to set data to Power Automate
-        self.update_status("Set to PAD function not implemented yet.")
+        
+        # Show a popup message saying "Done"
+        self.root.focus_force()
+        messagebox.showinfo("Status", "Done subflow pasting!")
 
 if __name__ == "__main__":
     root = tk.Tk()
