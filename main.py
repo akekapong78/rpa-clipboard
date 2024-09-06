@@ -16,7 +16,7 @@ class ClipboardManagerApp:
         # self.root.geometry("500x400")  # Set initial window size
 
         self.frame = tk.Frame(self.root, padx=10, pady=10)
-        self.frame.pack(fill=tk.BOTH)
+        self.frame.pack(fill=tk.BOTH, expand=False)
         # self.frame.pack(fill=tk.BOTH, expand=True)
 
         # Create buttons with styling and grid layout
@@ -207,6 +207,9 @@ class ClipboardManagerApp:
                         expected_content = entry['content']
                         pyperclip.copy(expected_content)
                         
+                        # Add a small delay to ensure the clipboard is properly updated
+                        time.sleep(1)  # Wait 1 second before checking clipboard for the first item
+
                         # Poll the clipboard until the content is set or timeout occurs
                         start_time = time.time()
                         max_wait_time = 30  # Set max wait time to 30 seconds
@@ -223,9 +226,9 @@ class ClipboardManagerApp:
                         if clipboard_ready:
                             pyautogui.hotkey('ctrl', 'v')
                             time.sleep(1.5)  # Allow time for the paste to complete
-                            self.update_status(f"Successfully pasted entry {index+1}/{len(self.clipboard_entries)}")
+                            self.update_status(f"Successfully pasted entry {entry['label']}")
                         else:
-                            self.update_status(f"Failed to set clipboard for entry {index+1}. Clipboard did not match within the timeout.")
+                            self.update_status(f"Failed to set clipboard for entry {entry['label']}")
                             break  # Exit if clipboard content was not set in time
                     
                     self.update_status("Subflows pasted successfully.")
