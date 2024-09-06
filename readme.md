@@ -2,8 +2,6 @@
 
 ![RPA Clipboard Manager Screenshot](assets/capture.png)
 
-![RPA Clipboard Manager Screenshot](assets/capture_pro.png)
-
 The **RPA Clipboard Manager** is a simple yet powerful Python-based GUI application designed to help users manage and manipulate clipboard content. The application allows users to extract specific functions from the clipboard, save clipboard entries to a JSON file, load entries from a file, and easily set clipboard content from the application.
 
 ## Features
