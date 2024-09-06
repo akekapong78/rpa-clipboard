@@ -1,6 +1,6 @@
 # RPA Clipboard Manager
 
-![RPA Clipboard Manager Screenshot](assets/capture.png)
+![RPA Clipboard Manager Screenshot](assets/capture_pro.png)
 
 The **RPA Clipboard Manager** is a simple yet powerful Python-based GUI application designed to help users manage and manipulate clipboard content. The application allows users to extract specific functions from the clipboard, save clipboard entries to a JSON file, load entries from a file, and easily set clipboard content from the application.
 
@@ -11,6 +11,11 @@ The **RPA Clipboard Manager** is a simple yet powerful Python-based GUI applicat
 - **Load from File**: Load previously saved clipboard entries from a JSON file.
 - **Save to File**: Save the current clipboard entries to a JSON file for later use.
 - **Clear List**: Clear all entries in the list and the clipboard.
+
+## Added Features (Pro Version)
+
+- **Get Subflow Auto**: Copy clipboard subflows on Power Automate automaticly.
+- **Set Subflow Auto**: Paste clipboard subflows to Power Automate automaticly.
 
 ## Installation
 
@@ -25,9 +30,16 @@ To run the application, you need to install the following libraries:
 
 ```bash
 pip install pyautogui pygetwindow pillow pyperclip pyinstaller
+```
 
+To run application
+
+```bash
+python main.py
+```
+
+To build exe file
+
+```bash
 pyinstaller main.py --onefile --windowed
-pyinstaller --onefile --add-data "assets/subflow_button.png;assets" --add-data "assets/subflow_button_active.png;assets" main.py --windowed
-pyinstaller gen-activate.py --onefile
-
 ```

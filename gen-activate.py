@@ -14,3 +14,4 @@ def generate_activation_key():
 if __name__ == "__main__":
     key = generate_activation_key()
     print(f"Generated Activation Key: {key}")
+    input()
