@@ -1,5 +1,5 @@
 build
-dist
+# dist
 *.spec
 *.json
 main-pro.py
@@ -7,3 +7,4 @@ gen-activate.py
 subflow_button_active.png
 subflow_button.png
 tempCodeRunnerFile.py
+gen-activate.exe
