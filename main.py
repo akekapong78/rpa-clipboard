@@ -1,24 +1,44 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog
+from tkinter import messagebox, filedialog, simpledialog
 import pyperclip
 import json
 import re
 import pyautogui
 import pygetwindow as gw
-import sys
+import hashlib
+from datetime import datetime
 import time
-
+import os
 
 class ClipboardManagerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("RPA Clipboard Manager")
-        # self.root.geometry("500x400")  # Set initial window size
+
+        # Track activation status
+        self.activated = False
+        self.activation_file = "activation_status.json"
+
+        # Get the current USERNAME from the environment
+        self.username = os.getenv('USERNAME')
+
+        # Status Bar
+        self.status_bar = tk.Label(self.root, text="Ready", bd=1, relief=tk.SUNKEN, anchor=tk.W)
+        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+
+        # Create a menu
+        self.menu_bar = tk.Menu(self.root)
+        self.root.config(menu=self.menu_bar)
+
+        # Add an "Home" menu with activation
+        self.home_menu = tk.Menu(self.menu_bar, tearoff=0)
+        self.menu_bar.add_cascade(label="Home", menu=self.home_menu)
+        self.home_menu.add_command(label="Activate", command=self.show_activation_dialog)
+        self.home_menu.add_command(label="Exit", command=self.exit_app)
 
         self.frame = tk.Frame(self.root, padx=10, pady=10)
         self.frame.pack(fill=tk.BOTH, expand=False)
-        # self.frame.pack(fill=tk.BOTH, expand=True)
-
+        
         # Create buttons with styling and grid layout
         self.add_button = tk.Button(self.frame, text="Add Clipboard", command=self.add_clipboard_entry,
                                     bg='#4CAF50', fg='white', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5)
@@ -37,28 +57,87 @@ class ClipboardManagerApp:
         self.save_button.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
 
         self.get_pad_button = tk.Button(self.frame, text="Get from PAD", command=self.get_from_pad,
-                                        bg='#607D8B', fg='white', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5)
+                                        bg='#607D8B', fg='white', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5, state=tk.DISABLED)
         self.get_pad_button.grid(row=2, column=0, padx=5, pady=5, sticky='ew')
 
         self.set_pad_button = tk.Button(self.frame, text="Set to PAD", command=self.set_to_pad,
-                                        bg='#795548', fg='white', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5)
+                                        bg='#795548', fg='white', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5, state=tk.DISABLED)
         self.set_pad_button.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
 
         self.clear_button = tk.Button(self.frame, text="Clear List", command=self.clear_list,
                                       bg='#FFC107', fg='black', font=('Arial', 12), relief=tk.RAISED, padx=10, pady=5)
         self.clear_button.grid(row=3, column=0, columnspan=2, padx=5, pady=10, sticky='ew')
 
-
         # Listbox to display clipboard entries
         self.listbox = tk.Listbox(self.root, font=('Arial', 12), selectmode=tk.SINGLE)
         self.listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
-        # Status Bar
-        self.status_bar = tk.Label(self.root, text="Ready", bd=1, relief=tk.SUNKEN, anchor=tk.W)
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-
         # List to store clipboard entries
         self.clipboard_entries = []
+
+        # Check if the app is already activated for the current user
+        self.check_activation_status()
+
+
+    # Check activation status on startup
+    def check_activation_status(self):
+        if os.path.exists(self.activation_file):
+            with open(self.activation_file, 'r') as file:
+                activation_data = json.load(file)
+                if activation_data.get(self.username, False):
+                    self.activated = True
+                    self.get_pad_button.config(state=tk.NORMAL)
+                    self.set_pad_button.config(state=tk.NORMAL)
+                    self.update_status("Activated for user: " + self.username)
+                else:
+                    self.update_status("Not activated for user: " + self.username)
+        else:
+            self.update_status("No activation data found. Please activate.")
+
+    # Function to show the activation dialog
+    def show_activation_dialog(self):
+        activation_key = simpledialog.askstring("Activate", "Enter activation key:")
+        if activation_key:
+            self.handle_activate(activation_key)
+
+    # Handle activation logic
+    def handle_activate(self, entered_key):
+        salt = self.generate_salt()
+        generated_key = self.encrypt_key(salt)
+
+        if entered_key == generated_key:
+            self.activated = True
+            self.get_pad_button.config(state=tk.NORMAL)
+            self.set_pad_button.config(state=tk.NORMAL)
+            self.save_activation_status()
+            messagebox.showinfo("Activation", "Activation successful!")
+            self.update_status("Activated.")
+        else:
+            messagebox.showerror("Activation", "Invalid activation key.")
+            self.update_status("Activation failed.")
+
+    # Generate a salt based on the current date (UTC midnight)
+    def generate_salt(self):
+        utc_midnight = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        return utc_midnight.strftime('%Y-%m-%d')
+
+    # Encrypt the salt to create an activation key
+    def encrypt_key(self, salt):
+        return hashlib.sha256(salt.encode()).hexdigest()
+        
+    # Save the activation status to a local file
+    def save_activation_status(self):
+        activation_data = {}
+        if os.path.exists(self.activation_file):
+            with open(self.activation_file, 'r') as file:
+                activation_data = json.load(file)
+
+        activation_data[self.username] = True
+
+        with open(self.activation_file, 'w') as file:
+            json.dump(activation_data, file)
+
+        self.update_status(f"Activation saved for user: {self.username}")
 
 
     def find_text_between(self, text, start, end):
@@ -80,9 +159,13 @@ class ClipboardManagerApp:
                 self.clipboard_entries.append({'label': entry_label, 'content': clipboard_content})
                 self.update_listbox()
                 pyperclip.copy('')  # Optionally clear the clipboard
-                self.update_status("Added clipboard entry.")
+                self.update_status("Added Power Automate clipboard entry.")
             else:
-                self.update_status("No functions found in clipboard content.")
+                entry_label = f"Clipboard {len(self.clipboard_entries) + 1}"
+                self.clipboard_entries.append({'label': entry_label, 'content': clipboard_content})
+                self.update_listbox()
+                pyperclip.copy('')  # Optionally clear the clipboard
+                self.update_status("Added some clipboard entry.")
         else:
             self.update_status("Warning: Clipboard is empty.")
 
@@ -176,12 +259,14 @@ class ClipboardManagerApp:
                     self.update_status("Image not found.")
             except Exception as e:
                 self.update_status(f"Error during Get from PAD: {str(e)}")
+
+            # Show a popup message saying "Done"
+            self.root.focus_force()
+            messagebox.showinfo("Status", "Done subflow copying!")
+
         else:
             self.update_status("Power Automate window not found. Exiting...")
         
-        # Show a popup message saying "Done"
-        self.root.focus_force()
-        messagebox.showinfo("Status", "Done subflow copying!")
 
 
     def set_to_pad(self):
@@ -237,14 +322,24 @@ class ClipboardManagerApp:
                     self.update_status("Image not found.")
             except Exception as e:
                 self.update_status(f"Error during Get from PAD: {str(e)}")
+            
+            # Show a popup message saying "Done"
+            self.root.focus_force()
+            messagebox.showinfo("Status", "Done subflow pasting!")
+
         else:
             self.update_status("Power Automate window not found. Exiting...")
         
-        # Show a popup message saying "Done"
-        self.root.focus_force()
-        messagebox.showinfo("Status", "Done subflow pasting!")
+    def exit_app(self):
+        # Optionally, you can prompt the user to confirm exit
+        if messagebox.askokcancel("Exit", "Do you really want to exit?"):
+            self.root.destroy()
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = ClipboardManagerApp(root)
     root.mainloop()
+
+
+# Build script
+# pyinstaller --onefile --add-data "assets/subflow_button.png;assets" --add-data "assets/subflow_button_active.png;assets" main.py
