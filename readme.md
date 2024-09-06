@@ -27,5 +27,7 @@ To run the application, you need to install the following libraries:
 pip install pyautogui pygetwindow pillow pyperclip pyinstaller
 
 pyinstaller main.py --onefile --windowed
+pyinstaller --onefile --add-data "assets/subflow_button.png;assets" --add-data "assets/subflow_button_active.png;assets" main.py --windowed
+pyinstaller gen-activate.py --onefile
 
 ```
