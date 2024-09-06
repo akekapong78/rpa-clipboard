@@ -1,5 +1,6 @@
 build
 dist
+*.spec
 main-pro.py
 gen-activate.py
 subflow_button_active.png
