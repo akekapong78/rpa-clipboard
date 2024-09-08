@@ -16,6 +16,7 @@ The **RPA Clipboard Manager** is a simple yet powerful Python-based GUI applicat
 
 - **Get Subflow Auto**: Copy clipboard subflows on Power Automate automaticly.
 - **Set Subflow Auto**: Paste clipboard subflows to Power Automate automaticly.
+- **Activate Key**: To request activated key, add LINE ID @127gyvgn
 
 ## Installation
 
