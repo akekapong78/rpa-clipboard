@@ -1,7 +1,9 @@
 build
+dev
 # dist
 *.spec
 *.json
+.DS_Store
 main-pro.py
 gen-activate.py
 tempCodeRunnerFile.py
